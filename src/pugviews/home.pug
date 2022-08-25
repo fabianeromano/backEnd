@@ -1,0 +1,11 @@
+h1 Ingrese Producto
+form(action="/productos" method="post")
+    label(for="title") Nombre
+    input(type="text" name="title" id="title")
+    label(for="price") Precio
+    input(type="number" name="price" id="price")
+    label(for="thumbnail") Foto URL
+    input(type="text" name="thumbnail" id="thumbnail")
+    button(type="submit" name="save" id="save") Enviar
+
+a(href="/productos") Productos

@@ -74,6 +74,4 @@ class ProductsRepository {
     }
 }
 
-const productsRepository = new ProductsRepository()
-
-module.exports = productsRepository;
+export const productsRepository = new ProductsRepository()
