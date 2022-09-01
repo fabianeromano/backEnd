@@ -3,7 +3,9 @@ import { engine } from "express-handlebars";
 import { productsRepository } from "./src/db/productos.js";
 import http from "http";
 import { Server as IOServer } from "socket.io";
-import { fileHandler } from "./src/utils/files.js";
+import { FileHandler } from "./src/utils/files.js";
+
+const fileHandler = new FileHandler('./messages.txt');
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -59,6 +61,7 @@ io.on("connection", (socket) => {
   });
   socket.on("new-message", (data) => {
     messages.push(data);
+    fileHandler.save(data);
     io.sockets.emit("messages", messages);
   });
 });

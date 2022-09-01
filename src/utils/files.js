@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-class FileHandler {
+export class FileHandler {
     constructor(ruta) {
         this.ruta = ruta
     }
@@ -18,7 +18,7 @@ class FileHandler {
 
             objetos.push({ ...nuevoObjeto, id: newId })
 
-            await fs.writeFile(this.ruta, JSON.stringify(objetos, null, 2))
+            await fs.writeFileSync(this.ruta, JSON.stringify(objetos, null, 2))
             return newId
         } catch (error) {
             throw new Error(`Error al guardar: ${error}`)
@@ -36,7 +36,7 @@ class FileHandler {
     }
     async getAll() {
         try {
-            const objetos = await fs.readFile(this.ruta, "utf-8")
+            const objetos = await fs.readFileSync(this.ruta, "utf-8")
             return JSON.parse(objetos)
         } catch (error) {
             return []
@@ -49,7 +49,7 @@ class FileHandler {
             if (nuevoDato.length === objetos.length) {
                 throw new Error(`Error while deleting. The id: ${id} was not found.`);
             }
-            await fs.writeFile(this.ruta, JSON.stringify(objetos, null, 2))
+            await fs.writeFileSync(this.ruta, JSON.stringify(objetos, null, 2))
         } catch (error) {
             throw new Error(`Error while deleting.`);
         }
@@ -57,11 +57,9 @@ class FileHandler {
     async deleteAll() {
         try {
             const content = [];
-            await fs.writeFile(this.ruta, JSON.stringify(content, null, 2))
+            await fs.writeFileSync(this.ruta, JSON.stringify(content, null, 2))
         } catch (error) {
             throw new Error(error);
         }
     }
 }
-
-export const fileHandler = new FileHandler('./../../messages.txt');
