@@ -1,5 +1,5 @@
 <h1>Ingrese Producto</h1>
-<form action="/productos" method="post">
+<form id="product-form">
   <label for="title">Nombre</label>
   <input type="text" name="title" id="title" />
   <label for="price">Precio</label>
@@ -9,4 +9,32 @@
   <button type="submit" name="save" id="save">Enviar</button>
 </form>
 
-<a href="/productos">Productos</a>
+<div id="productos"></div>
+
+<script type="text/javascript">
+  var socket = io();
+  const form = document.getElementById("product-form");
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const producto = {
+      title: document.getElementById("title").value,
+      price: document.getElementById("price").value,
+      thumbnail: document.getElementById("thumbnail").value,
+    }
+
+    socket.emit("new-product", producto);
+    return false;
+  });
+
+  socket.on('productos', (productos) => {
+    const vistaProductos = document.getElementById('productos');
+    fetch('/productos')
+    .then(res => res.text())
+    .then(vista => {
+      vistaProductos.innerHTML = vista
+    })
+  })
+</script>
+
+<a href="/message-center">Mensajes</a>
