@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Compras</title>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8"
+        crossorigin="anonymous"></script>
+</head>
+
+<body class="container">
+    <header>
+        <nav class="navbar navbar-expand-lg bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Tienda</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Inicio</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <button type="button"
+                                class="btn btn-primary text-light position-relative nav-link dropdown-toggle"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                Carrito
+                                <span id="cartQuantity"
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    0
+                                    <span class="visually-hidden">products in cart</span>
+                                </span>
+                            </button>
+
+                            <ul class="dropdown-menu" id="cartList">
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <!-- Listado de Productos -->
+    <section id="products" class="mt-5">
+        <h2>Productos</h2>
+        <div class="row" id="productList">
+        </div>
+    </section>
+    <!-- Fin Listado de Productos -->
+    <!-- Agregar Producto -->
+    <section id="addProduct" class="mt-5">
+        <h2 id="addProductTitle">Agregar Producto</h2>
+        <form id="formProduct">
+            <input type="hidden" name="_method" id="_method" value="POST">
+            <input type="hidden" name="id" value="0" id="id" />
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" name="nombre">
+            </div>
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción</label>
+                <input type="text" class="form-control" name="descripcion">
+            </div>
+            <div class="mb-3">
+                <label for="codigo" class="form-label">Código</label>
+                <input type="text" class="form-control" name="codigo">
+            </div>
+            <div class="mb-3">
+                <label for="foto" class="form-label">Foto</label>
+                <input type="text" class="form-control" name="foto">
+            </div>
+            <div class="mb-3">
+                <label for="precio" class="form-label">Precio</label>
+                <input type="number" class="form-control" name="precio">
+            </div>
+            <div class="mb-3">
+                <label for="stock" class="form-label">Stock</label>
+                <input type="number" class="form-control" name="stock">
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="reset" class="btn btn-primary">Cancelar</button>
+        </form>
+    </section>
+    <!-- Fin Agregar Producto -->
+</body>
+<script type="text/javascript">
+    const BASE_URL = "http://localhost:8080"
+    let products = [];
+    let cartId = 0;
+
+    function initForm() {
+        const title = document.getElementById("addProductTitle");
+        title.innerText = "Agregar Producto";
+
+        const form = document.getElementById("formProduct");
+        form.querySelectorAll('input').forEach(inp => inp.value = null);
+        form.action = `${BASE_URL}/productos`;
+        form._method.value = "POST";
+    }
+
+    document.getElementById("formProduct").addEventListener("reset", function (e) {
+        initForm();
+    });
+
+    document.getElementById("formProduct").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const formDataObj = Object.fromEntries(formData.entries());
+        delete formDataObj.id;
+        delete formDataObj._method;
+
+        const newId = await fetch(`${form.action}`, {
+            mode: 'cors',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            method: form._method.value,
+            body: JSON.stringify(formDataObj),
+        })
+
+        await getProducts();
+        initForm();
+    });
+
+    async function deleteProduct(id) {
+        await fetch(`${BASE_URL}/productos/${id}`, {
+            mode: 'cors',
+            method: "DELETE",
+        });
+        await getProducts();
+    }
+
+    async function updateProduct(id) {
+        const title = document.getElementById("addProductTitle");
+        title.innerText = "Editar Producto"
+        const form = document.getElementById("formProduct");
+        form.action = `${BASE_URL}/productos/${id}`;
+        form._method.value = "PUT";
+        const product = products.find(product => product.id == id);
+        form.querySelectorAll('input').forEach(inp => {
+            if (product[inp.name])
+                inp.value = product[inp.name]
+        });
+    }
+
+    async function addProductToCart(id) {
+        await fetch(`${BASE_URL}/carrito/${cartId}/productos`, {
+            mode: 'cors',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            method: "POST",
+            body: JSON.stringify({ id }),
+        })
+    }
+
+    async function deleteProdInCart(id) {
+        await fetch(`${BASE_URL}/carrito/${cartId}/productos/${id}`, {
+            mode: 'cors',
+            method: 'DELETE'
+        });
+    }
+
+    async function deleteCart() {
+        await fetch(`${BASE_URL}/carrito/${cartId}`, {
+            mode: 'cors',
+            method: 'DELETE'
+        });
+        localStorage.removeItem("cartId");
+        await getCartId();
+    }
+
+    async function getCartId() {
+        const cartIdLocal = localStorage.getItem("cartId");
+        cartId = cartIdLocal !== null ? +cartIdLocal : 0;
+        if (cartId === 0) {
+            const resp = await fetch(`${BASE_URL}/carrito/new`, {
+                mode: 'cors',
+                method: 'POST'
+            });
+            carrito = await resp.json();
+            cartId = carrito.id;
+            localStorage.setItem('cartId', cartId);
+        }
+        await getCart(cartId);
+    }
+
+    async function getProducts() {
+        const resp = await fetch(`${BASE_URL}/productos`, {
+            mode: 'cors',
+        });
+        products = await resp.json();
+        const list = document.getElementById('productList');
+        let newData = '';
+        products.forEach(prod => {
+            const productHtml = `<div class="card m-2" style="width: 18rem;">
+                    <img src="${prod.foto}" class="card-img-top" alt="${prod.nombre}">
+                    <div class="card-body">
+                        <h5 class="card-title">${prod.nombre}</h5>
+                        <p class="card-text">Descripción: ${prod.descripcion}</p>
+                        <p class="card-text">Código: ${prod.codigo}</p>
+                        <p class="card-text">Precio: $${(+prod.precio).toFixed(2)}</p>
+                        <p class="card-text">Stock: ${prod.stock}</p>
+                        <button class="btn btn-primary" onclick="addProductToCart(${prod.id})">Agregar a Carrito</button>
+                        <button class="btn btn-primary" onclick="updateProduct(${prod.id})">Actualizar</button>
+                        <button class="btn btn-danger" onclick="deleteProduct(${prod.id})">Eliminar</button>
+                    </div>
+                </div>`;
+            newData = newData + productHtml;
+        });
+        list.innerHTML = newData;
+    }
+
+    async function getCart(id) {
+        const resp = await fetch(`${BASE_URL}/carrito/${id}/productos`);
+        products = await resp.json();
+        const cartQuantity = document.getElementById('cartQuantity');
+        cartQuantity.innerHTML = products.reduce((acc, prod) => acc + prod.quantity, 0);
+
+        let cartProductList = '';
+        products.forEach(product => {
+            const productHtml = `<li><span class="dropdown-item">
+                ${product.nombre} x ${product.quantity} - $${((+product.quantity) * (+product.precio)).toFixed(2)} 
+                <button type="button" class="btn btn-danger p-2 pt-0 pb-0" onclick="deleteProdInCart(${product.id})">X</button>
+                </span></li>`;
+            cartProductList = cartProductList + productHtml;
+        })
+
+        const cartList = document.getElementById('cartList');
+
+        if (products.length > 0) {
+            const cartTotal = `<li>
+                <hr class="dropdown-divider">
+                </li>
+                <li><span class="dropdown-item"><strong>Total: $${(products.reduce((acc, prod) => acc + ((+prod.quantity) * (+prod.precio)), 0)).toFixed(2)}</strong></span></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li><span class="dropdown-item"><button type="button" class="btn btn-danger" onclick="deleteCart()">Eliminar</button></span></li>
+                `;
+            cartList.innerHTML = cartProductList + cartTotal;
+        } else {
+            cartList.innerHTML = `<li><span class="dropdown-item">No hay productos en el carrito</span></li>`
+        }
+    }
+
+    async function init() {
+        await getProducts();
+        await getCartId();
+        await initForm();
+    }
+
+    init();
+</script>
+
+</html>

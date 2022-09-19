@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 
 export class FileHandler {
+    ruta: string;
     constructor(ruta) {
         this.ruta = ruta
     }
@@ -17,7 +18,6 @@ export class FileHandler {
             }
 
             objetos.push({ ...nuevoObjeto, id: newId })
-
             await fs.writeFileSync(this.ruta, JSON.stringify(objetos, null, 2))
             return newId
         } catch (error) {
@@ -49,7 +49,21 @@ export class FileHandler {
             if (nuevoDato.length === objetos.length) {
                 throw new Error(`Error while deleting. The id: ${id} was not found.`);
             }
-            await fs.writeFileSync(this.ruta, JSON.stringify(objetos, null, 2))
+            await fs.writeFileSync(this.ruta, JSON.stringify(nuevoDato, null, 2))
+        } catch (error) {
+            throw new Error(`Error while deleting.`);
+        }
+    }
+    async updateById(id, data) {
+        try {
+            const objetos = await this.getAll();
+            const nuevoDato = objetos.map((obj) => {
+                if(obj.id == id){
+                    return {...obj, ...data};
+                }
+                return obj;
+            })
+            await fs.writeFileSync(this.ruta, JSON.stringify(nuevoDato, null, 2))
         } catch (error) {
             throw new Error(`Error while deleting.`);
         }
@@ -59,7 +73,7 @@ export class FileHandler {
             const content = [];
             await fs.writeFileSync(this.ruta, JSON.stringify(content, null, 2))
         } catch (error) {
-            throw new Error(error);
+            throw new Error((error as Error).message);
         }
     }
 }
