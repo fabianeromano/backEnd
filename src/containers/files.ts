@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 
-export class FileHandler {
+export class FileContainer {
     ruta: string;
     constructor(ruta) {
         this.ruta = ruta

@@ -1,12 +1,12 @@
 export class Producto {
     id: Number;
-    timestamp: number;
+    timestamp: Number;
     nombre: String;
     descripcion: String;
     codigo: String;
-    foto: any;
-    precio: any;
-    stock: any;
+    foto: String;
+    precio: Number;
+    stock: Number;
 
     constructor(nombre, descripcion, codigo, foto, precio, stock){
         this.id = 0;
